@@ -3,12 +3,12 @@ const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
 
 const TELEGRAM_TOKEN = '8959432093:AAH-5RXawqhC4AGXavYUtXgMRkZTmENrrq8';
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const OWNER_CHAT_ID = process.env.OWNER_CHAT_ID;
 const PORT = process.env.PORT || 10000;
 const RENDER_URL = process.env.RENDER_EXTERNAL_URL || 'https://telegram-assistant-bot-egtj.onrender.com';
 
-console.log('🔑 OpenRouter Key:', OPENROUTER_API_KEY ? OPENROUTER_API_KEY.substring(0, 20) + '...' : 'YOQ!');
+console.log('🔑 Groq Key:', GROQ_API_KEY ? GROQ_API_KEY.substring(0, 15) + '...' : 'YOQ!');
 console.log('👤 Owner ID:', OWNER_CHAT_ID);
 
 const bot = new TelegramBot(TELEGRAM_TOKEN, { webHook: { port: PORT } });
@@ -34,9 +34,9 @@ async function askAI(userMessage, chatId) {
   }
 
   const response = await axios.post(
-    'https://openrouter.ai/api/v1/chat/completions',
+    'https://api.groq.com/openai/v1/chat/completions',
     {
-      model: 'qwen/qwen3-8b:free',
+      model: 'llama-3.1-8b-instant',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         ...conversationHistory[chatId]
@@ -44,10 +44,10 @@ async function askAI(userMessage, chatId) {
     },
     {
       headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': RENDER_URL,
-        'X-Title': 'Sardorbek Assistant Bot'
+        
+        
       }
     }
   );
