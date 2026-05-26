@@ -36,7 +36,7 @@ async function askAI(userMessage, chatId) {
   const response = await axios.post(
     'https://openrouter.ai/api/v1/chat/completions',
     {
-      model: 'meta-llama/llama-3.1-8b-instruct:free',
+      model: 'qwen/qwen3-8b:free',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         ...conversationHistory[chatId]
