@@ -103,5 +103,14 @@ bot.on('message', async (msg) => {
   }
 });
 
+// Render uchun HTTP server (port ochiq bo'lishi kerak)
+const http = require('http');
+const PORT = process.env.PORT || 3000;
+http.createServer((req, res) => {
+  res.writeHead(200);
+  res.end('Sardorbek Assistant Bot is running! 🤖');
+}).listen(PORT);
+
 console.log('✅ Bot ishga tushdi!');
+console.log(`🌐 HTTP server: port ${PORT}`);
 console.log('🛑 To\'xtatish uchun: Ctrl+C');
