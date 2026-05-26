@@ -10,7 +10,12 @@ const OWNER_CHAT_ID = process.env.OWNER_CHAT_ID; // Sardorbekning o'z chat ID si
 // Har bir foydalanuvchi uchun suhbat tarixi
 const conversationHistory = {};
 
-const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
+const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: { interval: 2000, autoStart: false, params: { timeout: 10 } } });
+
+bot.deleteWebHook().then(() => {
+  console.log("✅ Webhook tozalandi, polling boshlandi");
+  bot.startPolling();
+});
 
 const SYSTEM_PROMPT = `Siz Sardorbekning shaxsiy AI assistentidasiz. Sardorbek — backend developer (Node.js, NestJS), Urganch davlat universitetining 941-23 guruh talabasi.
 
