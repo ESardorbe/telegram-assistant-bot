@@ -1,19 +1,16 @@
 require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
-const http = require('http');
 
 const TELEGRAM_TOKEN = '8959432093:AAH-5RXawqhC4AGXavYUtXgMRkZTmENrrq8';
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const OWNER_CHAT_ID = process.env.OWNER_CHAT_ID;
 const PORT = process.env.PORT || 3000;
-const RENDER_URL = process.env.RENDER_EXTERNAL_URL || `https://telegram-assistant-bot-egtj.onrender.com`;
+const RENDER_URL = process.env.RENDER_EXTERNAL_URL || 'https://telegram-assistant-bot-egtj.onrender.com';
 
-console.log('🔑 API Key mavjud:', !!ANTHROPIC_API_KEY);
+console.log('🔑 Gemini API Key mavjud:', !!GEMINI_API_KEY);
 console.log('👤 Owner Chat ID:', OWNER_CHAT_ID);
-console.log('🌐 Webhook URL:', RENDER_URL);
 
-// Webhook rejimi - polling yo'q, 409 xatosi yo'q!
 const bot = new TelegramBot(TELEGRAM_TOKEN, { webHook: { port: PORT } });
 bot.setWebHook(`${RENDER_URL}/bot${TELEGRAM_TOKEN}`);
 
@@ -28,33 +25,24 @@ Qoidalar:
 - O'zbek, rus yoki ingliz tilida javob bering (foydalanuvchi qaysi tilda yozsa, shunda)
 - Doim xushmuomala va professional bo'ling`;
 
-async function askClaude(userMessage, chatId) {
+async function askGemini(userMessage, chatId) {
   if (!conversationHistory[chatId]) conversationHistory[chatId] = [];
 
-  conversationHistory[chatId].push({ role: 'user', content: userMessage });
+  conversationHistory[chatId].push({ role: 'user', parts: [{ text: userMessage }] });
   if (conversationHistory[chatId].length > 20) {
     conversationHistory[chatId] = conversationHistory[chatId].slice(-20);
   }
 
   const response = await axios.post(
-    'https://api.anthropic.com/v1/messages',
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
     {
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      system: SYSTEM_PROMPT,
-      messages: conversationHistory[chatId]
-    },
-    {
-      headers: {
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json'
-      }
+      system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+      contents: conversationHistory[chatId]
     }
   );
 
-  const assistantMessage = response.data.content[0].text;
-  conversationHistory[chatId].push({ role: 'assistant', content: assistantMessage });
+  const assistantMessage = response.data.candidates[0].content.parts[0].text;
+  conversationHistory[chatId].push({ role: 'model', parts: [{ text: assistantMessage }] });
   return assistantMessage;
 }
 
@@ -73,7 +61,7 @@ bot.on('message', async (msg) => {
 
     try {
       bot.sendChatAction(chatId, 'typing');
-      const reply = await askClaude(userText, chatId);
+      const reply = await askGemini(userText, chatId);
       await bot.sendMessage(chatId, reply);
 
       if (OWNER_CHAT_ID && chatId.toString() !== OWNER_CHAT_ID) {
@@ -84,11 +72,17 @@ bot.on('message', async (msg) => {
         );
       }
     } catch (error) {
-      console.error('❌ Xato:', error.response?.status, error.response?.data || error.message);
+      console.error('❌ Xato:', error.response?.status, JSON.stringify(error.response?.data) || error.message);
       bot.sendMessage(chatId, 'Kechirasiz, hozir texnik muammo bor. Keyinroq urinib ko\'ring.');
     }
   }
 });
 
-console.log('✅ Bot webhook rejimida ishga tushdi!');
+const http = require('http');
+http.createServer((req, res) => {
+  res.writeHead(200);
+  res.end('Sardorbek Assistant Bot is running! 🤖');
+}).listen(PORT);
+
+console.log('✅ Bot (Gemini) webhook rejimida ishga tushdi!');
 console.log(`🌐 Port: ${PORT}`);
