@@ -78,11 +78,6 @@ bot.on('message', async (msg) => {
   }
 });
 
-const http = require('http');
-http.createServer((req, res) => {
-  res.writeHead(200);
-  res.end('Sardorbek Assistant Bot is running! 🤖');
-}).listen(PORT);
 
 console.log('✅ Bot (Gemini) webhook rejimida ishga tushdi!');
 console.log(`🌐 Port: ${PORT}`);
